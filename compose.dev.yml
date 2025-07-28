@@ -1,0 +1,54 @@
+services:
+  mcp-proxy-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build-deps
+    container_name: mcp-proxy-server-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "9229:9229"  # Node.js debugger port
+    environment:
+      NODE_ENV: development
+      PORT: 8080
+      HOST: 0.0.0.0
+      LOG_LEVEL: debug
+      SESSION_TIMEOUT: 3600000
+      BATCH_TIMEOUT: 5000
+      CORS_ORIGINS: "*"
+      AUTH_TYPE: none  # Disable auth in development
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./package.json:/app/package.json:ro
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
+      - ./config:/app/config:ro
+      - ./data:/app/data
+    networks:
+      - mcp-network
+    working_dir: /app
+    command: ["pnpm", "run", "dev"]
+
+  # Local MCP servers for testing
+  mcp-filesystem-dev:
+    image: node:20-alpine
+    container_name: mcp-filesystem-server-dev
+    working_dir: /app
+    command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/data"]
+    volumes:
+      - ./test-data:/data
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    environment:
+      DEBUG: "*"
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  test-data:
+    driver: local

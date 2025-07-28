@@ -1,0 +1,75 @@
+services:
+  mcp-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-proxy-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      HOST: 0.0.0.0
+      LOG_LEVEL: info
+      SESSION_TIMEOUT: 3600000
+      BATCH_TIMEOUT: 5000
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:8000"
+      AUTH_TYPE: bearer
+      # Auth tokens should be provided via .env file or secrets
+      AUTH_TOKENS: ${AUTH_TOKENS:-}
+    volumes:
+      # Mount config directory for server configurations
+      - ./config:/app/config:ro
+      # Mount for server-specific data if needed
+      - ./data:/app/data
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); });"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 128M
+
+  # Example MCP server containers that the proxy can connect to
+  mcp-filesystem:
+    image: node:20-alpine
+    container_name: mcp-filesystem-server
+    working_dir: /app
+    command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/data"]
+    volumes:
+      - ./data:/data:ro
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  mcp-github:
+    image: node:20-alpine
+    container_name: mcp-github-server
+    working_dir: /app
+    command: ["npx", "-y", "@modelcontextprotocol/server-github"]
+    environment:
+      GITHUB_PERSONAL_ACCESS_TOKEN: ${GITHUB_TOKEN:-}
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+networks:
+  mcp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  mcp-data:
+    driver: local

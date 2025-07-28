@@ -1,0 +1,82 @@
+{
+  "port": 8080,
+  "host": "127.0.0.1",
+  "sessionTimeout": 3600000,
+  "batchTimeout": 5000,
+  "cors": {
+    "origins": [
+      "http://localhost:3000",
+      "http://localhost:8000",
+      "https://app.example.com"
+    ],
+    "credentials": true
+  },
+  "auth": {
+    "type": "bearer",
+    "tokens": [
+      "your-secret-token-here",
+      "another-secret-token"
+    ]
+  },
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/data"
+      ],
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "endpoint": "/filesystem"
+    },
+    {
+      "name": "github",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "endpoint": "/github"
+    },
+    {
+      "name": "slack",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-slack"
+      ],
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+        "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
+      },
+      "endpoint": "/slack"
+    },
+    {
+      "name": "memory",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "endpoint": "/memory"
+    },
+    {
+      "name": "postgres",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres"
+      ],
+      "env": {
+        "POSTGRES_CONNECTION_URL": "${DATABASE_URL}"
+      },
+      "endpoint": "/postgres"
+    }
+  ]
+}
