@@ -1,9 +1,9 @@
 import { EventEmitter } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import { sessionLogger as logger } from '../utils/logger.js';
-import type { Session, ServerConfig } from '../types/index.js';
 import type { Response } from 'express';
 import type { ManagedProcess } from '../process/manager.js';
+import type { ServerConfig } from '../validation/schemas.js';
 
 export interface SessionManagerOptions {
   sessionTimeout: number;
@@ -17,6 +17,17 @@ export interface SessionEvents {
   'session:expired': (sessionId: string) => void;
   'session:destroyed': (sessionId: string) => void;
   'session:activity': (sessionId: string) => void;
+}
+
+export interface Session {
+  id: string;
+  createdAt: Date;
+  lastActivityAt: Date;
+  stdioProcess?: ManagedProcess;
+  serverConfig: ServerConfig;
+  messageQueue: unknown[];
+  isInitialized: boolean;
+  sseConnections: Set<Response>;
 }
 
 export class SessionManager extends EventEmitter {

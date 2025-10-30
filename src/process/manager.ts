@@ -1,7 +1,16 @@
 import { spawn, type ChildProcess, type SpawnOptions } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { processLogger as logger } from '../utils/logger.js';
-import type { ServerConfig, ProcessInfo } from '../types/index.js';
+import type { ServerConfig } from '../validation/schemas.js';
+
+export interface ProcessInfo {
+  pid: number;
+  command: string;
+  args: string[];
+  startedAt: Date;
+  restarts: number;
+  status: 'running' | 'stopped' | 'crashed';
+}
 
 export interface ProcessManagerEvents {
   'process:started': (processId: string, info: ProcessInfo) => void;

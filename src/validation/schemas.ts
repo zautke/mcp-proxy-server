@@ -100,7 +100,7 @@ export const ServerConfigSchema = z.object({
   name: z.string().min(1),
   command: z.string().min(1),
   args: z.array(z.string()).default([]),
-  env: z.record(z.string()).optional(),
+  env: z.record(z.string(), z.string()).optional(),
   cwd: z.string().optional(),
   endpoint: z.string().optional(),
 });
@@ -125,7 +125,10 @@ export const ProxyConfigSchema = z.object({
   host: z.string().default('127.0.0.1'),
   sessionTimeout: z.number().min(0).default(3600000), // 1 hour
   batchTimeout: z.number().min(0).default(5000), // 5 seconds
-  cors: CorsConfigSchema.default({}),
+  cors: CorsConfigSchema.default({
+    origins: ['*'],
+    credentials: true,
+  }),
   auth: AuthConfigSchema.optional(),
   servers: z.array(ServerConfigSchema).min(1),
 });
